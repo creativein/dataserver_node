@@ -12,7 +12,7 @@ AWS.config.update({
 const s3 = new AWS.S3();
 
 exports.download = (req, res) => {
-    const filePath = path.join('temp', 'x' + ext);
+    // const filePath = path.join('temp', 'x' + ext);
 
     const params = {
         Bucket: process.env.AWS_BUCKET,
