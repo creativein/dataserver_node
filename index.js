@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { download } = require('./controllers/awsController');
+const { download, listBucket } = require('./controllers/awsController');
 require('dotenv').config()
 
 const port = process.env.SERVER_PORT;
@@ -13,6 +13,10 @@ app.get('/', (req, res) => {
 
 app.get('/download', (req, res) => {
   download(req, res);
+})
+
+app.get('/list', (req, res) => {
+  listBucket(req, res);
 })
 
 app.listen(port, () => {
