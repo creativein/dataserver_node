@@ -114,7 +114,3 @@ exports.listBucket = (req, res) => {
 
 
 }
-
-// http://localhost:8080/download?date=02_12_2021
-// http://localhost:8080/list?folder=similarwebresults
-// http://ec2-3-109-93-88.ap-south-1.compute.amazonaws.com:5000/download?date=04_06_2021

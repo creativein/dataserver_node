@@ -36,3 +36,13 @@ app.get('/list', (req, res) => {
 app.listen(port, () => {
   console.log(`Application is warm up and running on ${port}`)
 })
+
+
+
+// http://localhost:8080/download?date=02_12_2021
+// http://localhost:8080/download_webdata?date=02_12_2021
+// http://localhost:8080/list?folder=similarwebresults
+// http://localhost:8080/list?folder=results
+
+
+// http://ec2-3-109-93-88.ap-south-1.compute.amazonaws.com:5000/download?date=04_06_2021
