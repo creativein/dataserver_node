@@ -2,14 +2,6 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const path = require('path');
 
-//configuring the AWS environment
-AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    apiVersion: 'latest',
-    region: process.env.REGION_NAME,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
-
 // initialize s3
 const s3 = new AWS.S3();
 
@@ -34,49 +26,68 @@ exports.download = (req, res) => {
         Key: `results/${csvFileName}`
     };
 
-    const filePath = path.join('temp', csvFileName);
+    console.log('Looking For File:', csvFileName);
 
-    console.log('File', filePath);
+    try {
+        res.attachment(csvFileName);
 
-    return s3.getObject(params, (err, data) => {
-        if (err) {
-            console.error('error', err);
-            res.status(404).end()
-        };
-        fs.writeFileSync(filePath, data?.Body);
-
-        //download
-        res.download(filePath, function (err) {
+        const file = s3.getObject(params, (err, data) => {
             if (err) {
-                // Handle error, but keep in mind the response may be partially-sent
-                // so check res.headersSent
-                console.log(res.headersSent);
-            } else {
-                // decrement a download credit, etc. // here remove temp file
-                fs.unlink(filePath, function (err) {
-                    if (err) {
-                        console.error(err);
-                    }
-                    console.log('Temp File Delete');
-                });
-            }
-        })
+                res.status(500).end()
+            };
+        }).createReadStream();
 
-    });
+        file.pipe(res);
+    } catch (error) {
+        console.log('Error Occured:', error);
+        res.status(500).end();
+    }
+}
+
+exports.downloadWebData = (req, res) => {
+    const date = req.query?.date;
+    const fileName = `Web_data_${date}`;
+    let csvFileName = fileName.replaceAll('.', '_');
+    csvFileName = `${fileName}.csv`;
+
+    const params = {
+        Bucket: process.env.AWS_BUCKET,
+        Key: `similarwebresults/${csvFileName}`
+    };
+
+    console.log('Looking For File:', csvFileName);
+
+    try {
+        res.attachment(csvFileName);
+
+        const file = s3.getObject(params, (err, data) => {
+            if (err) {
+                res.status(500).end()
+            };
+        }).createReadStream();
+
+        file.pipe(res);
+    } catch (error) {
+        console.log('Error Occured:', error);
+        res.status(500).end();
+    }
 }
 
 exports.listBucket = (req, res) => {
+
+    const folderName = req.query?.folder ? req.query?.folder : 'results';
+
     var params = {
         Bucket: process.env.AWS_BUCKET,
         Delimiter: '/',
-        Prefix: 'results/'
+        Prefix: `${folderName}/`
     };
 
     const list = [];
 
     s3.listObjects(params, function (err, data) {
         if (err) {
-            return 'There was an error viewing your album: ' + err.message
+            return 'There was an error viewing your s3 folder: ' + err.message
         } else {
             data.Contents.forEach(function (obj, index) {
                 list.push({
@@ -92,4 +103,5 @@ exports.listBucket = (req, res) => {
 
 }
 
-//http://localhost:8080/download?date=02_12_2021
+// http://localhost:8080/download?date=02_12_2021
+// http://localhost:8080/list?folder=similarwebresults
