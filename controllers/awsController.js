@@ -3,7 +3,11 @@ const fs = require('fs');
 const path = require('path');
 
 // initialize s3
-const s3 = new AWS.S3();
+const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    region: process.env.REGION_NAME,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
 
 function formatSizeUnits(bytes) {
     if (bytes >= 1073741824) { bytes = (bytes / 1073741824).toFixed(2) + " GB"; }
@@ -16,28 +20,32 @@ function formatSizeUnits(bytes) {
 }
 
 exports.download = (req, res) => {
-    const date = req.query?.date;
-    const fileName = `User_data_${date}`;
-    let csvFileName = fileName.replaceAll('.', '_');
-    csvFileName = `${fileName}.csv`;
-
-    const params = {
-        Bucket: process.env.AWS_BUCKET,
-        Key: `results/${csvFileName}`
-    };
-
-    console.log('Looking For File:', csvFileName);
-
     try {
-        res.attachment(csvFileName);
+        const date = req.query?.date;
 
-        const file = s3.getObject(params, (err, data) => {
-            if (err) {
-                res.status(500).end()
+        if (date) {
+            const fileName = `User_data_${date}`;
+            let csvFileName = fileName.replaceAll('.', '_');
+            csvFileName = `${fileName}.csv`;
+
+            const params = {
+                Bucket: process.env.AWS_BUCKET,
+                Key: `results/${csvFileName}`
             };
-        }).createReadStream();
 
-        file.pipe(res);
+            console.log('Looking For File:', csvFileName);
+
+            res.attachment(csvFileName);
+
+            const file = s3.getObject(params).createReadStream().on('error', error => {
+                res.status(500).end();
+            });
+
+            file.pipe(res);
+        } else {
+            res.status(500).end();
+        }
+
     } catch (error) {
         console.log('Error Occured:', error);
         res.status(500).end();
@@ -45,28 +53,32 @@ exports.download = (req, res) => {
 }
 
 exports.downloadWebData = (req, res) => {
-    const date = req.query?.date;
-    const fileName = `Web_data_${date}`;
-    let csvFileName = fileName.replaceAll('.', '_');
-    csvFileName = `${fileName}.csv`;
-
-    const params = {
-        Bucket: process.env.AWS_BUCKET,
-        Key: `similarwebresults/${csvFileName}`
-    };
-
-    console.log('Looking For File:', csvFileName);
-
     try {
-        res.attachment(csvFileName);
+        const date = req.query?.date;
 
-        const file = s3.getObject(params, (err, data) => {
-            if (err) {
-                res.status(500).end()
+        if (date) {
+            const fileName = `Web_data_${date}`;
+            let csvFileName = fileName.replaceAll('.', '_');
+            csvFileName = `${fileName}.csv`;
+
+            const params = {
+                Bucket: process.env.AWS_BUCKET,
+                Key: `similarwebresults/${csvFileName}`
             };
-        }).createReadStream();
 
-        file.pipe(res);
+            console.log('Looking For File:', csvFileName);
+
+
+            res.attachment(csvFileName);
+
+            const file = s3.getObject(params).createReadStream().on('error', error => {
+                res.status(500).end();
+            });
+
+            file.pipe(res);
+        } else {
+            res.status(500).end();
+        }
     } catch (error) {
         console.log('Error Occured:', error);
         res.status(500).end();
@@ -105,3 +117,4 @@ exports.listBucket = (req, res) => {
 
 // http://localhost:8080/download?date=02_12_2021
 // http://localhost:8080/list?folder=similarwebresults
+// http://ec2-3-109-93-88.ap-south-1.compute.amazonaws.com:5000/download?date=04_06_2021

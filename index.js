@@ -8,7 +8,6 @@ const port = process.env.SERVER_PORT;
 const app = express();
 app.use(cors());
 
-
 //configuring the AWS environment
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
